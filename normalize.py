@@ -3,7 +3,7 @@ from sklearn import preprocessing
 
 def normalizeFeatures(sourcefile, outfile):
 	df = pd.read_csv(sourcefile)
-	normalized = preprocessing.normalize(df.values)
+	normalized = preprocessing.normalize(df.values.T)
 	df = pd.DataFrame(normalized)
 	df.to_csv(outfile)
 

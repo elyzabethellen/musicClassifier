@@ -7,15 +7,15 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-def kFoldCrossValidation(k, features, targets, model):
+def kFoldCrossValidation(k, train, target, model):
 	kf = KFold(n_splits=10, shuffle=True) # 10-folds, shuffle or genres will group together
-	for trainIndex, testIndex in kf.split(Xfft):
+	for trainIndex, testIndex in kf.split(train):
 		print(trainIndex)
 		print(testIndex)
-		Xtrain, Xtest = Xfft[trainIndex], Xfft[testIndex]
-		ytrain, ytest = y[trainIndex], y[testIndex]
+		Xtrain, Xtest = train[trainIndex], train[testIndex]
+		ytrain, ytest = target[trainIndex], target[testIndex]
 		model.fit(Xtrain, ytrain) #fit on each round
-	return model
+	return model, Xtest, ytest
 
 def setupTrainData(featureFile):
 	df = pd.read_csv(featureFile)
@@ -23,9 +23,7 @@ def setupTrainData(featureFile):
 	return train
 
 def internalTesting(model, expected, testData):
-	#expected = ytest
 	predicted = model.predict(testData)
-	# summarize the fit of the model
 	print(metrics.classification_report(expected, predicted))
 	return predicted
 
@@ -49,7 +47,16 @@ y = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 y = [x for x in y for i in range(90)] #repeat each label 90 times, that's all our classifications
 y = np.array(y)
 
-Xmfcc = setupTrainData('normalizedmfcc.csv')
+X = setupTrainData('normalizedSpec.csv')
+model, Xtest, expected = kFoldCrossValidation(10, X, y, model)
+X = setupTrainData('normalizedMfcc.csv')
+model, Xtest, expected = kFoldCrossValidation(10, X, y, model)
+X = setupTrainData('normalizedFft.csv')
+model, Xtest, expected = kFoldCrossValidation(10, X, y, model)
+predicted = internalTesting(model, expected, Xtest)
+confusionMatrix(expected, predicted, 'compositeLogReg.pdf')
+
+
 
 
 
