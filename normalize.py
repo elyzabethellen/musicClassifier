@@ -7,9 +7,16 @@ def normalizeFeatures(sourcefile, outfile):
 	df = pd.DataFrame(normalized)
 	df.to_csv(outfile)
 
-normalizeFeatures('fftFeatures.csv', 'normalizedFft.csv')
-normalizeFeatures('mfccFeatures.csv', 'normalizedMfcc.csv')
-normalizeFeatures('specFeatures.csv','normalizedSpec.csv')
+#scaling to accommodate negative values
+def scaleFeatures(sourcefile, outfile):
+	df = pd.read_csv(sourcefile)
+	scaled = preprocessing.minmax_scale(df.values.T)
+	df = pd.DataFrame(scaled)
+	df.to_csv(outfile)
+
+normalizeFeatures('fftFeatures.csv', 'scaledFft.csv')
+scaleFeatures('mfccFeatures2.csv', 'scaledMfcc.csv')
+scaleFeatures('specFeatures2.csv','scaledSpec.csv')
 
 
 

@@ -47,17 +47,33 @@ y = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 y = [x for x in y for i in range(90)] #repeat each label 90 times, that's all our classifications
 y = np.array(y)
 
-X = setupTrainData('normalizedSpec.csv')
-model, Xtest, expected = kFoldCrossValidation(10, X, y, model)
-X = setupTrainData('normalizedMfcc.csv')
-model, Xtest, expected = kFoldCrossValidation(10, X, y, model)
-X = setupTrainData('normalizedFft.csv')
+X = setupTrainData('scaledSpec.csv')
 model, Xtest, expected = kFoldCrossValidation(10, X, y, model)
 predicted = internalTesting(model, expected, Xtest)
-confusionMatrix(expected, predicted, 'compositeLogReg.pdf')
+confusionMatrix(expected, predicted, 'spec2LogReg.pdf')
 
+model = LogisticRegression()
+X = setupTrainData('scaledMfcc.csv')
+model, Xtest, expected = kFoldCrossValidation(10, X, y, model)
+predicted = internalTesting(model, expected, Xtest)
+confusionMatrix(expected, predicted, 'mfcc2LogReg.pdf')
 
+model = LogisticRegression()
+X = setupTrainData('scaledFft.csv')
+model, Xtest, expected = kFoldCrossValidation(10, X, y, model)
+predicted = internalTesting(model, expected, Xtest)
+confusionMatrix(expected, predicted, 'fft2LogReg.pdf')
 
+###############
+model = LogisticRegression()
+X = setupTrainData('scaledSpec.csv')
+model, Xtest, expected = kFoldCrossValidation(10, X, y, model)
+X = setupTrainData('scaledMfcc.csv')
+model, Xtest, expected = kFoldCrossValidation(10, X, y, model)
+X = setupTrainData('scaledFft.csv')
+model, Xtest, expected = kFoldCrossValidation(10, X, y, model)
+predicted = internalTesting(model, expected, Xtest)
+confusionMatrix(expected, predicted, 'composite.pdf')
 
 
 

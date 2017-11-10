@@ -29,7 +29,7 @@ def mfccExtractor(paths, classKeys):
 		for file in os.listdir(p):
 			if fnmatch.fnmatch(file, '*.au'):
 				y, sr = librosa.load('' + p + file)  # y, sr = np array, sample rate
-				mfccFeat = abs(librosa.feature.mfcc(y[1:3000], n_mfcc=13)) #take the abs here, we will normalize later also so don't want to lose vals
+				mfccFeat = librosa.feature.mfcc(y[1:3000], n_mfcc=13) #take the abs here, we will normalize later also so don't want to lose vals
 				mfcc = mfccFeat.tolist()[0] #librosa gives us a nested numpy array, we don't lose any info by doing this.
 				mfccFeatures.append(mfcc)
 				classifications.append(classKeys.get(p))
@@ -43,7 +43,7 @@ def specCentExtractor(data, filename): #spectral Centroids
 			if fnmatch.fnmatch(file, '*.au'):
 				y, sr = librosa.load('' + p + file)  # y, sr = np array, sample rate
 				y, sr = librosa.load('genres/blues/blues.00000.au')
-				specFeat = librosa.feature.spectral_centroid(y[1:3000], sr)
+				specFeat = librosa.feature.spectral_centroid(y, sr)
 				spec = specFeat.tolist()[0]
 				specFeatures.append(spec)
 				classifications.append(classKeys.get(p))
@@ -72,19 +72,20 @@ data = {'fft': fftFeatures, 'xclass': classifications}
 featureWriter(fftFeatures, 'fftFeatures.csv')
 headers = range(0, len(fftFeatures[0]))
 featureWriterWithClass(data, 'fftFeaturesWithClass.csv', headers)
+'''
 
 mfccFeatures, classifications = mfccExtractor(paths, classKeys)
 data = {'mfcc': mfccFeatures, 'xclass': classifications}
-featureWriter(mfccFeatures, 'mfccFeatures.csv')
-headers = range(0, len(mfccFeatures[0]))
-featureWriterWithClass(data, 'mfccFeaturesWithClass.csv', headers)
+featureWriter(mfccFeatures, 'mfccFeatures2.csv')
+#headers = range(0, len(mfccFeatures[0]))
+#featureWriterWithClass(data, 'mfccFeaturesWithClass.csv', headers)
 
 specFeatures, classifications = specCentExtractor(paths, classKeys)
 data = {'spec': specFeatures, 'xclass': classifications}
-featureWriter(specFeatures, 'specFeatures.csv')
-headers = range(0, len(specFeatures[0]))
-featureWriterWithClass(data, 'specFeaturesWithClass.csv', headers)
-'''
-classifications = [c for c in genres for i in range(90)]
-print(classifications)
-writeClassifications(classifications)
+featureWriter(specFeatures, 'specFeatures2.csv')
+#headers = range(0, len(specFeatures[0]))
+#featureWriterWithClass(data, 'specFeaturesWithClass.csv', headers)
+
+#classifications = [c for c in genres for i in range(90)]
+#print(classifications)
+#writeClassifications(classifications)
