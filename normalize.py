@@ -16,8 +16,7 @@ def scaleFeatures(sourcefile, outfile):
 
 scaleFeatures('fftFeatures.csv', 'scaledFft.csv')
 scaleFeatures('mfccFeatures2.csv', 'scaledMfcc.csv')
-scaleFeatures('tempoFeatures.csv', 'scaledTempo.csv')
-#scaleFeatures('specFeatures2.csv','scaledSpec.csv')
+scaleFeatures('specFeatures2.csv','scaledSpec.csv')
 
 
 

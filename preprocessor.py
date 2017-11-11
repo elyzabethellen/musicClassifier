@@ -29,7 +29,7 @@ def mfccExtractor(paths, classKeys):
 		for file in os.listdir(p):
 			if fnmatch.fnmatch(file, '*.au'):
 				y, sr = librosa.load('' + p + file)  # y, sr = np array, sample rate
-				mfccFeat = librosa.feature.mfcc(y[1:3000], n_mfcc=13) #take the abs here, we will normalize later also so don't want to lose vals
+				mfccFeat = librosa.feature.mfcc(y, n_mfcc=13)
 				mfcc = mfccFeat.tolist()[0] #librosa gives us a nested numpy array, we don't lose any info by doing this.
 				mfccFeatures.append(mfcc)
 				classifications.append(classKeys.get(p))
@@ -42,23 +42,24 @@ def specCentExtractor(data, filename): #spectral Centroids
 		for file in os.listdir(p):
 			if fnmatch.fnmatch(file, '*.au'):
 				y, sr = librosa.load('' + p + file)  # y, sr = np array, sample rate
-				y, sr = librosa.load('genres/blues/blues.00000.au')
 				specFeat = librosa.feature.spectral_centroid(y, sr)
 				spec = specFeat.tolist()[0]
 				specFeatures.append(spec)
 				classifications.append(classKeys.get(p))
 	return specFeatures, classifications
 
-def tempogramExtractor(data, filename): #spectral Centroids
+def tempogramExtractor(data, filename): #estimate the tempo of the song
 	tempoFeatures = []
 	classifications = []
 	for p in paths:
 		for file in os.listdir(p):
 			if fnmatch.fnmatch(file, '*.au'):
 				y, sr = librosa.load('' + p + file)  # y, sr = np array, sample rate
-				y, sr = librosa.load('genres/blues/blues.00000.au')
-				tempoFeat = librosa.feature.tempogram(y, sr)
-				tempo = tempoFeat.tolist()[0]
+				oenv = librosa.onset.onset_strength(y=y, sr=sr, hop_length=512)
+				tempoFeat = librosa.feature.tempogram(y, sr, onset_envelope=oenv, hop_length=512)
+				globalAutoCorr = librosa.autocorrelate(oenv, max_size=tempoFeat.shape[0])
+				globalAutoCorr = librosa.util.normalize(globalAutoCorr)
+				tempo = librosa.beat.tempo(onset_envelope=oenv, sr=sr, hop_length = 512)[0]
 				tempoFeatures.append(tempo)
 				classifications.append(classKeys.get(p))
 	return tempoFeatures, classifications
@@ -90,11 +91,11 @@ featureWriterWithClass(data, 'fftFeaturesWithClass.csv', headers)
 
 mfccFeatures, classifications = mfccExtractor(paths, classKeys)
 featureWriter(mfccFeatures, 'mfccFeatures2.csv')
-
+'''
 
 specFeatures, classifications = specCentExtractor(paths, classKeys)
 featureWriter(specFeatures, 'specFeatures2.csv')
-'''
+
 
 tempoFeatures, classifications = tempogramExtractor(paths, classKeys)
 featureWriter(tempoFeatures, 'tempoFeatures.csv')
