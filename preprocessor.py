@@ -49,6 +49,20 @@ def specCentExtractor(data, filename): #spectral Centroids
 				classifications.append(classKeys.get(p))
 	return specFeatures, classifications
 
+def tempogramExtractor(data, filename): #spectral Centroids
+	tempoFeatures = []
+	classifications = []
+	for p in paths:
+		for file in os.listdir(p):
+			if fnmatch.fnmatch(file, '*.au'):
+				y, sr = librosa.load('' + p + file)  # y, sr = np array, sample rate
+				y, sr = librosa.load('genres/blues/blues.00000.au')
+				tempoFeat = librosa.feature.tempogram(y, sr)
+				tempo = tempoFeat.tolist()[0]
+				tempoFeatures.append(tempo)
+				classifications.append(classKeys.get(p))
+	return tempoFeatures, classifications
+
 def featureWriter(data, filename):
 	df = pd.DataFrame(data)
 	df.to_csv(filename)
@@ -72,19 +86,19 @@ data = {'fft': fftFeatures, 'xclass': classifications}
 featureWriter(fftFeatures, 'fftFeatures.csv')
 headers = range(0, len(fftFeatures[0]))
 featureWriterWithClass(data, 'fftFeaturesWithClass.csv', headers)
-'''
+
 
 mfccFeatures, classifications = mfccExtractor(paths, classKeys)
-data = {'mfcc': mfccFeatures, 'xclass': classifications}
 featureWriter(mfccFeatures, 'mfccFeatures2.csv')
-#headers = range(0, len(mfccFeatures[0]))
-#featureWriterWithClass(data, 'mfccFeaturesWithClass.csv', headers)
+
 
 specFeatures, classifications = specCentExtractor(paths, classKeys)
-data = {'spec': specFeatures, 'xclass': classifications}
 featureWriter(specFeatures, 'specFeatures2.csv')
-#headers = range(0, len(specFeatures[0]))
-#featureWriterWithClass(data, 'specFeaturesWithClass.csv', headers)
+'''
+
+tempoFeatures, classifications = tempogramExtractor(paths, classKeys)
+featureWriter(tempoFeatures, 'tempoFeatures.csv')
+
 
 #classifications = [c for c in genres for i in range(90)]
 #print(classifications)

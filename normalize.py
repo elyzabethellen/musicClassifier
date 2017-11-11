@@ -14,9 +14,10 @@ def scaleFeatures(sourcefile, outfile):
 	df = pd.DataFrame(scaled)
 	df.to_csv(outfile)
 
-normalizeFeatures('fftFeatures.csv', 'scaledFft.csv')
+scaleFeatures('fftFeatures.csv', 'scaledFft.csv')
 scaleFeatures('mfccFeatures2.csv', 'scaledMfcc.csv')
-scaleFeatures('specFeatures2.csv','scaledSpec.csv')
+scaleFeatures('tempoFeatures.csv', 'scaledTempo.csv')
+#scaleFeatures('specFeatures2.csv','scaledSpec.csv')
 
 
 
