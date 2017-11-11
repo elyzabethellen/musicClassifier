@@ -5,6 +5,8 @@ from sklearn.model_selection import cross_val_score
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from sklearn.feature_selection import RFE
+from kaggle import *
 
 
 def kFoldCrossValidation(k, train, target, model):
@@ -47,7 +49,14 @@ y = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 y = [x for x in y for i in range(90)] #repeat each label 90 times, that's all our classifications
 y = np.array(y)
 
-X = setupTrainData('scaledTempo.csv')
+#model = LogisticRegression()
+#X = setupTrainData('scaledFft.csv')
+#model, Xtest, expected = kFoldCrossValidation(10, X, y, model)
+#predicted = internalTesting(model, expected, Xtest)
+#confusionMatrix(expected, predicted, 'fft2LogReg.pdf')
+
+'''
+X = setupTrainData('tempoFeatures.csv').T
 model, Xtest, expected = kFoldCrossValidation(10, X, y, model)
 predicted = internalTesting(model, expected, Xtest)
 confusionMatrix(expected, predicted, 'tempoLogReg.pdf')
@@ -63,25 +72,26 @@ model, Xtest, expected = kFoldCrossValidation(10, X, y, model)
 predicted = internalTesting(model, expected, Xtest)
 confusionMatrix(expected, predicted, 'mfcc2LogReg.pdf')
 
-model = LogisticRegression()
-X = setupTrainData('scaledFft.csv')
-model, Xtest, expected = kFoldCrossValidation(10, X, y, model)
-predicted = internalTesting(model, expected, Xtest)
-confusionMatrix(expected, predicted, 'fft2LogReg.pdf')
+
+
 
 ###############
-model = LogisticRegression()
-X = setupTrainData('scaledTempo.csv')
-model, Xtest, expected = kFoldCrossValidation(10, X, y, model)
-X = setupTrainData('scaledMfcc.csv')
-model, Xtest, expected = kFoldCrossValidation(10, X, y, model)
-X = setupTrainData('scaledFft.csv')
-model, Xtest, expected = kFoldCrossValidation(10, X, y, model)
+#model = LogisticRegression()
+
+#X = setupTrainData('tempoFeatures.csv').T
+#model, Xtest, expected = kFoldCrossValidation(10, X, y, model)
+#X = setupTrainData('scaledMfcc.csv')
+#model, Xtest, expected = kFoldCrossValidation(10, X, y, model)
+#X = setupTrainData('scaledFft.csv')
+#model, Xtest, expected = kFoldCrossValidation(10, X, y, model)
 X = setupTrainData('scaledSpec.csv')
 model, Xtest, expected = kFoldCrossValidation(10, X, y, model)
 predicted = internalTesting(model, expected, Xtest)
-confusionMatrix(expected, predicted, 'composite.pdf')
-
-
-
-
+confusionMatrix(expected, predicted, 'specPred10rd.pdf')
+'''
+X = setupTrainData('scaledRaw.csv')
+rfe = RFE(model, 10)
+rfe = rfe.fit(X, y)
+idx = rfe.get_support() #this is a numpy boolean list
+makeRFEPrediction(rfe, idx)
+#makePrediction(model)

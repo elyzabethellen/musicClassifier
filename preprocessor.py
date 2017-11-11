@@ -10,6 +10,16 @@ import scipy
 import csv
 import pandas as pd
 
+def rawData(paths):
+	with open ('rawData.csv', 'w') as f:
+		writer = csv.writer(f)
+		for p in paths:
+			for file in os.listdir(p):
+				if fnmatch.fnmatch(file, '*.au'):
+					y, sr = librosa.load('' + p + file)  # y, sr = np array, sample rate
+					writer.writerow(y[1:1000])
+
+
 def fftExtractor(paths, classKeys):
 	fftFeatures = []
 	classifications = []
@@ -91,14 +101,16 @@ featureWriterWithClass(data, 'fftFeaturesWithClass.csv', headers)
 
 mfccFeatures, classifications = mfccExtractor(paths, classKeys)
 featureWriter(mfccFeatures, 'mfccFeatures2.csv')
-'''
-
-specFeatures, classifications = specCentExtractor(paths, classKeys)
-featureWriter(specFeatures, 'specFeatures2.csv')
 
 
 tempoFeatures, classifications = tempogramExtractor(paths, classKeys)
 featureWriter(tempoFeatures, 'tempoFeatures.csv')
+
+specFeatures, classifications = specCentExtractor(paths, classKeys)
+featureWriter(specFeatures, 'specFeatures2.csv')
+
+'''
+rawData(paths)
 
 
 #classifications = [c for c in genres for i in range(90)]
