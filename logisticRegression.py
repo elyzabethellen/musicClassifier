@@ -5,8 +5,7 @@ from sklearn.model_selection import cross_val_score
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn.feature_selection import RFE
-from kaggle import *
+from kaggle import writePredictionFromList
 
 
 def kFoldCrossValidation(k, train, target, model):
@@ -29,10 +28,6 @@ def internalTesting(model, expected, testData):
 	print(metrics.classification_report(expected, predicted))
 	return predicted
 
-def crossValScoring(model, train, test, iter):
-	scores = cross_val_score(model, train, test, iter)
-	print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
-
 def confusionMatrix(expected, predicted, save):
 	cm = metrics.confusion_matrix(expected, predicted)
 	fig, ax = plt.subplots()
@@ -49,49 +44,14 @@ y = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 y = [x for x in y for i in range(90)] #repeat each label 90 times, that's all our classifications
 y = np.array(y)
 
-#model = LogisticRegression()
-#X = setupTrainData('scaledFft.csv')
-#model, Xtest, expected = kFoldCrossValidation(10, X, y, model)
+
+X = np.loadtxt('newSpecContrast.csv', delimiter=',')
+model, Xtest, expected = kFoldCrossValidation(20, X, y, model)
+scores = cross_val_score(model, X, y, cv=10)
+print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
 #predicted = internalTesting(model, expected, Xtest)
-#confusionMatrix(expected, predicted, 'fft2LogReg.pdf')
+#confusionMatrix(expected, predicted, 'newTonnLogReg2.pdf')
+newX = np.loadtxt('specKaggleProcess.csv', delimiter=',')
+kagY = model.predict(newX)
+writePredictionFromList(kagY)
 
-'''
-X = setupTrainData('tempoFeatures.csv').T
-model, Xtest, expected = kFoldCrossValidation(10, X, y, model)
-predicted = internalTesting(model, expected, Xtest)
-confusionMatrix(expected, predicted, 'tempoLogReg.pdf')
-
-X = setupTrainData('scaledSpec.csv')
-model, Xtest, expected = kFoldCrossValidation(10, X, y, model)
-predicted = internalTesting(model, expected, Xtest)
-confusionMatrix(expected, predicted, 'spec2LogReg.pdf')
-
-model = LogisticRegression()
-X = setupTrainData('scaledMfcc.csv')
-model, Xtest, expected = kFoldCrossValidation(10, X, y, model)
-predicted = internalTesting(model, expected, Xtest)
-confusionMatrix(expected, predicted, 'mfcc2LogReg.pdf')
-
-
-
-
-###############
-#model = LogisticRegression()
-
-#X = setupTrainData('tempoFeatures.csv').T
-#model, Xtest, expected = kFoldCrossValidation(10, X, y, model)
-#X = setupTrainData('scaledMfcc.csv')
-#model, Xtest, expected = kFoldCrossValidation(10, X, y, model)
-#X = setupTrainData('scaledFft.csv')
-#model, Xtest, expected = kFoldCrossValidation(10, X, y, model)
-X = setupTrainData('scaledSpec.csv')
-model, Xtest, expected = kFoldCrossValidation(10, X, y, model)
-predicted = internalTesting(model, expected, Xtest)
-confusionMatrix(expected, predicted, 'specPred10rd.pdf')
-'''
-X = setupTrainData('scaledRaw.csv')
-rfe = RFE(model, 10)
-rfe = rfe.fit(X, y)
-idx = rfe.get_support() #this is a numpy boolean list
-makeRFEPrediction(rfe, idx)
-#makePrediction(model)

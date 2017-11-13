@@ -1,7 +1,7 @@
 #Elizabeth E. Esterly
 #The University of New Mexico
 #preprocessor.py
-#preprocess the data to extract features and create a .csv for each approach
+#preprocess the data to extract features, normalize, and create a .csv for each approach
 
 import os
 import librosa
@@ -9,8 +9,10 @@ import fnmatch
 import scipy
 import csv
 import pandas as pd
+import numpy as np
+from sklearn import preprocessing
 
-def rawData(paths):
+def rawDataExtractor(paths):
 	with open ('rawData.csv', 'w') as f:
 		writer = csv.writer(f)
 		for p in paths:
@@ -18,8 +20,6 @@ def rawData(paths):
 				if fnmatch.fnmatch(file, '*.au'):
 					y, sr = librosa.load('' + p + file)  # y, sr = np array, sample rate
 					writer.writerow(y[1:1000])
-
-
 def fftExtractor(paths, classKeys):
 	fftFeatures = []
 	classifications = []
@@ -29,90 +29,103 @@ def fftExtractor(paths, classKeys):
 				y, sr = librosa.load('' + p + file)  # y, sr = np array, sample rate
 				fftFeat = abs(scipy.fft(y)[1:1000])
 				fftFeatures.append(fftFeat)
-				classifications.append(classKeys.get(p))
 	return fftFeatures, classifications
 
-def mfccExtractor(paths, classKeys):
+
+def extractAllLibrosaFeatures(paths):
 	mfccFeatures = []
-	classifications = []
+	specContrastFeat = []
+	chromaFeatures = []
+	tonnetzFeatures = []
 	for p in paths:
 		for file in os.listdir(p):
 			if fnmatch.fnmatch(file, '*.au'):
-				y, sr = librosa.load('' + p + file)  # y, sr = np array, sample rate
-				mfccFeat = librosa.feature.mfcc(y, n_mfcc=13)
-				mfcc = mfccFeat.tolist()[0] #librosa gives us a nested numpy array, we don't lose any info by doing this.
-				mfccFeatures.append(mfcc)
-				classifications.append(classKeys.get(p))
-	return mfccFeatures, classifications
+				y, sr = librosa.load('' + p + file)
 
-def specCentExtractor(data, filename): #spectral Centroids
-	specFeatures = []
-	classifications = []
+
+
+				mfccs = np.mean(librosa.feature.mfcc(y=y, sr=sr, n_mfcc=40).T, axis=0)
+				mfccFeatures.append(mfccs)
+
+				stft = np.abs(librosa.stft(y))
+
+				contrast = np.mean(librosa.feature.spectral_contrast(S=stft, sr=sr).T, axis=0)
+				specContrastFeat.append(contrast)
+
+				chroma = np.mean(librosa.feature.chroma_stft(S=stft, sr=sr).T, axis=0)
+				chromaFeatures.append(chroma)
+
+				tonnetz = np.mean(librosa.feature.tonnetz(y=librosa.effects.harmonic(y), sr=sr).T, axis=0)
+				tonnetzFeatures.append(tonnetz)
+
+	#normalize with min-max scale
+	mfccFeatures = preprocessing.minmax_scale(mfccFeatures)
+	specContrastFeat = preprocessing.minmax_scale(specContrastFeat)
+	tonnetzFeatures = preprocessing.minmax_scale(tonnetzFeatures)
+	chromaFeatures = preprocessing.minmax_scale(chromaFeatures)
+
+	#write out
+	np.savetxt('newMfccs.csv', mfccFeatures, delimiter=',')
+	np.savetxt('newSpecContrast.csv', specContrastFeat, delimiter=',')
+	np.savetxt('newTonnetz.csv', tonnetzFeatures, delimiter=',')
+	np.savetxt('newChroma.csv', chromaFeatures, delimiter=',')
+
+
+#individual methods follow
+def tonnetzExtractor(paths, outfile):
+	tonnetzFeatures = []
 	for p in paths:
 		for file in os.listdir(p):
 			if fnmatch.fnmatch(file, '*.au'):
-				y, sr = librosa.load('' + p + file)  # y, sr = np array, sample rate
-				specFeat = librosa.feature.spectral_centroid(y, sr)
-				spec = specFeat.tolist()[0]
-				specFeatures.append(spec)
-				classifications.append(classKeys.get(p))
-	return specFeatures, classifications
+				y, sr = librosa.load('' + p + file)
+				tonnetz = np.mean(librosa.feature.tonnetz(y=librosa.effects.harmonic(y), sr=sr).T, axis=0)
+				tonnetzFeatures.append(tonnetz)
+	tonnetzFeatures = preprocessing.minmax_scale(tonnetzFeatures)
+	np.savetxt(outfile, tonnetzFeatures, delimiter=',')
 
-def tempogramExtractor(data, filename): #estimate the tempo of the song
-	tempoFeatures = []
-	classifications = []
+def spectralContrastExtractor(paths, outfile):
+	specContrastFeat = []
 	for p in paths:
 		for file in os.listdir(p):
 			if fnmatch.fnmatch(file, '*.au'):
-				y, sr = librosa.load('' + p + file)  # y, sr = np array, sample rate
-				oenv = librosa.onset.onset_strength(y=y, sr=sr, hop_length=512)
-				tempoFeat = librosa.feature.tempogram(y, sr, onset_envelope=oenv, hop_length=512)
-				globalAutoCorr = librosa.autocorrelate(oenv, max_size=tempoFeat.shape[0])
-				globalAutoCorr = librosa.util.normalize(globalAutoCorr)
-				tempo = librosa.beat.tempo(onset_envelope=oenv, sr=sr, hop_length = 512)[0]
-				tempoFeatures.append(tempo)
-				classifications.append(classKeys.get(p))
-	return tempoFeatures, classifications
+				y, sr = librosa.load('' + p + file)
+				stft = np.abs(librosa.stft(y))
+				contrast = np.mean(librosa.feature.spectral_contrast(S=stft, sr=sr).T, axis=0)
+				specContrastFeat.append(contrast)
+	specContrastFeat = preprocessing.minmax_scale(specContrastFeat)
+	np.savetxt(outfile, specContrastFeat, delimiter=',')
 
-def featureWriter(data, filename):
-	df = pd.DataFrame(data)
-	df.to_csv(filename)
+def mfccExtractor(paths, outfile):
+	mfccFeatures = []
+	for p in paths:
+		for file in os.listdir(p):
+			if fnmatch.fnmatch(file, '*.au'):
+				y, sr = librosa.load('' + p + file)
+				mfccs = np.mean(librosa.feature.mfcc(y=y, sr=sr, n_mfcc=40).T, axis=0)
+				mfccFeatures.append(mfccs)
+	mfccFeatures = preprocessing.minmax_scale(mfccFeatures)
+	np.savetxt(outfile, mfccFeatures, delimiter=',')
 
-def featureWriterWithClass(data, filename, headers):
-	df = pd.DataFrame(data, columns=headers)
+def chromaExtractor(paths, outfile):
+	chromaFeatures = []
+	for p in paths:
+		for file in os.listdir(p):
+			if fnmatch.fnmatch(file, '*.au'):
+				y, sr = librosa.load('' + p + file)
+				stft = np.abs(librosa.stft(y))
+				chroma = np.mean(librosa.feature.chroma_stft(S=stft, sr=sr).T, axis=0)
+				chromaFeatures.append(chroma)
+	chromaFeatures = preprocessing.minmax_scale(chromaFeatures)
+	np.savetxt(outfile, chromaFeatures, delimiter=',')
 
-def writeClassifications(classifications):
-	with open('classifications.csv', 'w') as f:
-		writer = csv.writer(f, quoting=csv.QUOTE_ALL)
-		writer.writerow(classifications)
+
+
 
 genres = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
 dir = 'genres/'
 paths = list(dir + g + '/' for g in genres)
-classKeys = dict(zip(paths, genres)) #map the path back to the genre for classification
-
-'''''
-fftFeatures, classifications = fftExtractor(paths, classKeys)
-data = {'fft': fftFeatures, 'xclass': classifications}
-featureWriter(fftFeatures, 'fftFeatures.csv')
-headers = range(0, len(fftFeatures[0]))
-featureWriterWithClass(data, 'fftFeaturesWithClass.csv', headers)
+chromaExtractor(paths, 'newChroma.csv')
+paths = ['rename/']
+chromaExtractor(paths, 'chromaKaggleProcess.csv')
 
 
-mfccFeatures, classifications = mfccExtractor(paths, classKeys)
-featureWriter(mfccFeatures, 'mfccFeatures2.csv')
-
-
-tempoFeatures, classifications = tempogramExtractor(paths, classKeys)
-featureWriter(tempoFeatures, 'tempoFeatures.csv')
-
-specFeatures, classifications = specCentExtractor(paths, classKeys)
-featureWriter(specFeatures, 'specFeatures2.csv')
-
-'''
-rawData(paths)
-
-
-#classifications = [c for c in genres for i in range(90)]
-#print(classifications)
-#writeClassifications(classifications)
