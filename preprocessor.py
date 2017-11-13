@@ -8,7 +8,6 @@ import librosa
 import fnmatch
 import scipy
 import csv
-import pandas as pd
 import numpy as np
 from sklearn import preprocessing
 
@@ -20,17 +19,6 @@ def rawDataExtractor(paths):
 				if fnmatch.fnmatch(file, '*.au'):
 					y, sr = librosa.load('' + p + file)  # y, sr = np array, sample rate
 					writer.writerow(y[1:1000])
-def fftExtractor(paths, classKeys):
-	fftFeatures = []
-	classifications = []
-	for p in paths:
-		for file in os.listdir(p):
-			if fnmatch.fnmatch(file, '*.au'):
-				y, sr = librosa.load('' + p + file)  # y, sr = np array, sample rate
-				fftFeat = abs(scipy.fft(y)[1:1000])
-				fftFeatures.append(fftFeat)
-	return fftFeatures, classifications
-
 
 def extractAllLibrosaFeatures(paths):
 	mfccFeatures = []
@@ -118,14 +106,24 @@ def chromaExtractor(paths, outfile):
 	chromaFeatures = preprocessing.minmax_scale(chromaFeatures)
 	np.savetxt(outfile, chromaFeatures, delimiter=',')
 
-
+def fftExtractor(paths, outfile):
+	fftFeatures = []
+	classifications = []
+	for p in paths:
+		for file in os.listdir(p):
+			if fnmatch.fnmatch(file, '*.au'):
+				y, sr = librosa.load('' + p + file)  # y, sr = np array, sample rate
+				fftFeat = abs(scipy.fft(y)[1:1000])
+				fftFeatures.append(fftFeat)
+	fftFeatures = preprocessing.minmax_scale(fftFeatures)
+	np.savetxt(outfile, fftFeatures, delimiter=',')
 
 
 genres = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
 dir = 'genres/'
 paths = list(dir + g + '/' for g in genres)
-chromaExtractor(paths, 'newChroma.csv')
+fftExtractor(paths, 'newFft.csv')
 paths = ['rename/']
-chromaExtractor(paths, 'chromaKaggleProcess.csv')
+chromaExtractor(paths, 'fftKaggleProcess.csv')
 
 
