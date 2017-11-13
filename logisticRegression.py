@@ -11,8 +11,6 @@ from kaggle import writePredictionFromList
 def kFoldCrossValidation(k, train, target, model):
 	kf = KFold(n_splits=10, shuffle=True) # 10-folds, shuffle or genres will group together
 	for trainIndex, testIndex in kf.split(train):
-		print(trainIndex)
-		print(testIndex)
 		Xtrain, Xtest = train[trainIndex], train[testIndex]
 		ytrain, ytest = target[trainIndex], target[testIndex]
 		model.fit(Xtrain, ytrain) #fit on each round
@@ -45,13 +43,13 @@ y = [x for x in y for i in range(90)] #repeat each label 90 times, that's all ou
 y = np.array(y)
 
 
-X = np.loadtxt('newSpecContrast.csv', delimiter=',')
+X = np.loadtxt('newChroma.csv', delimiter=',')
 model, Xtest, expected = kFoldCrossValidation(20, X, y, model)
 scores = cross_val_score(model, X, y, cv=10)
 print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
 #predicted = internalTesting(model, expected, Xtest)
 #confusionMatrix(expected, predicted, 'newTonnLogReg2.pdf')
-newX = np.loadtxt('specKaggleProcess.csv', delimiter=',')
+newX = np.loadtxt('chromaKaggleProcess.csv', delimiter=',')
 kagY = model.predict(newX)
 writePredictionFromList(kagY)
 
