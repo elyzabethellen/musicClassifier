@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.svm import SVC
 from sklearn.model_selection import cross_val_score
-from logisticRegression import kFoldCrossValidation
+from classifierSupport import *
 from kaggle import writePredictionFromList
 
 model = SVC(C=1.0, kernel='rbf', gamma=0.1)

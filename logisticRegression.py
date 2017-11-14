@@ -1,38 +1,10 @@
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import KFold
-from sklearn import metrics
 from sklearn.model_selection import cross_val_score
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
+from classifierSupport import *
 from kaggle import writePredictionFromList
 
 
-def kFoldCrossValidation(k, train, target, model):
-	kf = KFold(n_splits=10, shuffle=True) # 10-folds, shuffle or genres will group together
-	for trainIndex, testIndex in kf.split(train):
-		Xtrain, Xtest = train[trainIndex], train[testIndex]
-		ytrain, ytest = target[trainIndex], target[testIndex]
-		model.fit(Xtrain, ytrain) #fit on each round
-	return model, Xtest, ytest
 
-def setupTrainData(featureFile):
-	df = pd.read_csv(featureFile)
-	train = df.values.T #must transpose here! features were written transposed from numpy.vals
-	return train
-
-def internalTesting(model, expected, testData):
-	predicted = model.predict(testData)
-	print(metrics.classification_report(expected, predicted))
-	return predicted
-
-def confusionMatrix(expected, predicted, save):
-	cm = metrics.confusion_matrix(expected, predicted)
-	fig, ax = plt.subplots()
-	fig.subplots_adjust(left=0.3)
-	im = ax.imshow(cm, interpolation='nearest', cmap=plt.cm.ocean)
-	fig.colorbar(im, ax=ax)
-	fig.savefig(save)
 
 #make the logistic regression model
 model = LogisticRegression()
@@ -43,13 +15,13 @@ y = [x for x in y for i in range(90)] #repeat each label 90 times, that's all ou
 y = np.array(y)
 
 
-X = np.loadtxt('newChroma.csv', delimiter=',')
-model, Xtest, expected = kFoldCrossValidation(20, X, y, model)
-scores = cross_val_score(model, X, y, cv=10)
+X = np.loadtxt('100mfcc.csv', delimiter=',')
+model, Xtest, expected = kFoldCrossValidation(25, X, y, model)
+scores = cross_val_score(model, X, y, cv=50)
 print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
-#predicted = internalTesting(model, expected, Xtest)
-#confusionMatrix(expected, predicted, 'newTonnLogReg2.pdf')
-newX = np.loadtxt('chromaKaggleProcess.csv', delimiter=',')
+predicted = internalTesting(model, expected, Xtest)
+confusionMatrix(expected, predicted, '100mfcc.pdf')
+newX = np.loadtxt('100mfccKaggleProcess.csv', delimiter=',')
 kagY = model.predict(newX)
 writePredictionFromList(kagY)
 

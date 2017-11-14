@@ -89,7 +89,7 @@ def mfccExtractor(paths, outfile):
 		for file in os.listdir(p):
 			if fnmatch.fnmatch(file, '*.au'):
 				y, sr = librosa.load('' + p + file)
-				mfccs = np.mean(librosa.feature.mfcc(y=y, sr=sr, n_mfcc=40).T, axis=0)
+				mfccs = np.mean(librosa.feature.mfcc(y=y, sr=sr, n_mfcc=100).T, axis=0)
 				mfccFeatures.append(mfccs)
 	mfccFeatures = preprocessing.minmax_scale(mfccFeatures)
 	np.savetxt(outfile, mfccFeatures, delimiter=',')
@@ -122,8 +122,8 @@ def fftExtractor(paths, outfile):
 genres = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
 dir = 'genres/'
 paths = list(dir + g + '/' for g in genres)
-fftExtractor(paths, 'newFft.csv')
+mfccExtractor(paths, '100mfcc.csv')
 paths = ['rename/']
-chromaExtractor(paths, 'fftKaggleProcess.csv')
+mfccExtractor(paths, '100mfccKaggleProcess.csv')
 
 
